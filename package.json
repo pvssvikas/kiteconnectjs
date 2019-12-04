@@ -1,31 +1,26 @@
 {
-  "name": "kiteconnect",
+  "name": "@pvssvikas/kiteapi",
   "version": "3.1.0",
-  "description": "The official JS client library for the Kite Connect trading APIs",
+  "description": "my personal version of kiteconnect",
   "main": "./lib/",
   "scripts": {
     "generate-docs": "node_modules/.bin/jsdoc --configure .jsdoc.json --verbose"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/zerodhatech/kiteconnectjs.git"
+    "url": "git+https://git@github.com/pvssvikas/kiteconnectjs.git"
   },
   "keywords": [
-    "kiteconnect",
-    "kite",
-    "zerodha",
-    "rainmatter",
     "trading",
     "api",
     "stock",
     "market"
   ],
-  "author": "Vivek R",
-  "license": "MIT",
+  "author": "Vikas Putcha",
   "bugs": {
-    "url": "https://github.com/zerodhatech/kiteconnectjs/issues"
+    "url": "https://github.com/pvssvikas/kiteconnectjs/issues"
   },
-  "homepage": "https://github.com/zerodhatech/kiteconnectjs#readme",
+  "homepage": "https://github.com/pvssvikas/kiteconnectjs/issues#readme",
   "dependencies": {
     "axios": "^0.17.1",
     "crypto-js": "^3.1.9-1",
