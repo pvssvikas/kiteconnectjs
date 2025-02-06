@@ -3,91 +3,130 @@ My Personal Javascript node client for communicating with the Kite API
 
 Kite Connect is a set of REST-like APIs that expose many capabilities required to build a complete investment and trading platform. Execute orders in real time, manage user portfolio, stream live market data (WebSockets), and more, with the simple HTTP API collection.
 
-[Zerodha Technology](http://zerodha.com) (c) 2018. Licensed under the MIT License.
+[Zerodha Technology](http://zerodha.com) (c) 2024. Licensed under the MIT License.
 
 ## Documentation
-- [Javascript client documentation](https://kite.trade/docs/kiteconnectjs/v3)
+
+- [Typescript client documentation](https://kite.trade/docs/kiteconnectjs/v3)
 - [Kite Connect HTTP API documentation](https://kite.trade/docs/connect/v3)
 
-Installation
-------------
-Install via npm
+## Requirements
 
-	npm install kiteconnect
+- NodeJS v18.0.0+
 
-Getting started with API
-------------------------
-	var KiteConnect = require("kiteconnect").KiteConnect;
+## Installation
 
-	var kc = new KiteConnect({
-		api_key: "your_api_key"
-	});
+Install via [npm](https://www.npmjs.com/package/kiteconnect)
 
-	kc.generateSession("request_token", "api_secret")
-		.then(function(response) {
-			init();
-		})
-		.catch(function(err) {
-			console.log(err);
-		});
+    npm install kiteconnect@latest
 
-	function init() {
-		// Fetch equity margins.
-		// You can have other api calls here.
-		kc.getMargins()
-			.then(function(response) {
-				// You got user's margin details.
-			}).catch(function(err) {
-				// Something went wrong.
-			});
-	}
+Or via [yarn](https://yarnpkg.com/package/kiteconnect)
 
-API promises
--------------
-All API calls returns a promise which you can use to call methods like `.then(...)` and `.catch(...)`.
+    yarn add kiteconnect
 
-	kiteConnectApiCall
-		.then(function(v) {
-		    // On success
-		})
-		.catch(function(e) {
-			// On rejected
-		});
+## Getting started with API
 
-Getting started WebSocket client
---------------------------------
-	var KiteTicker = require("kiteconnect").KiteTicker;
-	var ticker = new KiteTicker({
-		api_key: "api_key",
-		access_token: "access_token"
-	});
+```typescript
+import { KiteConnect } from "kiteconnect";
 
-	ticker.connect();
-	ticker.on("ticks", onTicks);
-	ticker.on("connect", subscribe);
+const apiKey = "your_api_key";
+const apiSecret = "your_api_secret";
+const requestToken = "your_request_token";
 
-	function onTicks(ticks) {
-		console.log("Ticks", ticks);
-	}
+const kc = new KiteConnect({ api_key: apiKey });
 
-	function subscribe() {
-		var items = [738561];
-		ticker.subscribe(items);
-		ticker.setMode(ticker.modeFull, items);
-	}
+async function init() {
+  try {
+    await generateSession();
+    await getProfile();
+  } catch (err) {
+    console.error(err);
+  }
+}
 
-Auto re-connect WebSocket client
--------------------------------
-Optionally you can enable client side auto re-connection to automatically reconnect if the connection is dropped.
-It is very useful at times when client side network is unreliable and patchy.
+async function generateSession() {
+  try {
+    const response = await kc.generateSession(requestToken, apiSecret);
+    kc.setAccessToken(response.access_token);
+    console.log("Session generated:", response);
+  } catch (err) {
+    console.error("Error generating session:", err);
+  }
+}
 
-All you need to do is enable auto re-connection with preferred interval and time. For example
+async function getProfile() {
+  try {
+    const profile = await kc.getProfile();
+    console.log("Profile:", profile);
+  } catch (err) {
+    console.error("Error getting profile:", err);
+  }
+}
+// Initialize the API calls
+init();
+```
 
-	// Enable auto reconnect with 5 second interval and retry for maximum of 20 times.
-	ticker.autoReconnect(true, 20, 5)
+## Getting started WebSocket client
 
-	// You can also set re-connection times to -1 for infinite re-connections
-	ticker.autoReconnect(true, -1, 5)
+```typescript
+import { KiteTicker } from "kiteconnect";
+
+const apiKey = "your_api_key";
+const accessToken = "generated_access_token";
+
+const ticker = new KiteTicker({
+  api_key: apiKey,
+  access_token: accessToken,
+});
+
+ticker.connect();
+ticker.on("ticks", onTicks);
+ticker.on("connect", subscribe);
+ticker.on("disconnect", onDisconnect);
+ticker.on("error", onError);
+ticker.on("close", onClose);
+ticker.on("order_update", onTrade);
+
+function onTicks(ticks: any[]): void {
+  console.log("Ticks", ticks);
+}
+
+function subscribe(): void {
+  const tokens = [738561, 256265];
+  ticker.subscribe(tokens);
+  ticker.setMode(ticker.modeFull, tokens);
+}
+
+function onDisconnect(error: Error): void {
+  console.log("Closed connection on disconnect", error);
+}
+
+function onError(error: Error): void {
+  console.log("Closed connection on error", error);
+}
+
+function onClose(reason: string): void {
+  console.log("Closed connection on close", reason);
+}
+
+function onTrade(order: any): void {
+  console.log("Order update", order);
+}
+```
+
+## Auto re-connect WebSocket client
+
+Optionally, you can enable client-side auto re-connection to automatically reconnect if the connection is dropped. It is very useful when the client-side network is unreliable and patchy.
+
+Enable auto re-connection with a preferred interval and time. For example:
+
+```typescript
+// Enable auto reconnect with 5 second interval and retry for maximum of 20 times.
+ticker.autoReconnect(true, 20, 5);
+
+// You can also set re-connection times to -1 for infinite re-connections
+ticker.autoReconnect(true, -1, 5);
+```
 
 - Event `reconnecting` is called when auto re-connection is triggered and event callback carries two additional params `reconnection interval set` and `current re-connection count`.
 
@@ -97,42 +136,61 @@ All you need to do is enable auto re-connection with preferred interval and time
 
 Here is an example demonstrating auto reconnection.
 
-  	var KiteTicker = require("kiteconnect").KiteTicker;
-  	var ticker = new KiteTicker({
-  		api_key: "api_key",
-  		access_token: "access_token"
- 	});
+```typescript
+import { KiteTicker } from "kiteconnect";
 
-  	// set autoreconnect with 10 maximum reconnections and 5 second interval
-  	ticker.autoReconnect(true, 10, 5)
-  	ticker.connect();
-  	ticker.on("ticks", onTicks);
-  	ticker.on("connect", subscribe);
+const apiKey = "your_api_key";
+const accessToken = "generated_access_token";
+const ticker = new KiteTicker({
+  api_key: "api_key",
+  access_token: "access_token",
+});
+ticker.autoReconnect(true, 10, 5);
+ticker.connect();
+ticker.on("ticks", onTicks);
+ticker.on("connect", subscribe);
+ticker.on("noreconnect", () => {
+  console.log("noreconnect");
+});
+ticker.on("reconnect", (reconnect_count: any, reconnect_interval: any) => {
+  console.log(
+    "Reconnecting: attempt - ",
+    reconnect_count,
+    " interval - ",
+    reconnect_interval
+  );
+});
 
-  	ticker.on("noreconnect", function() {
-  		console.log("noreconnect");
-  	});
+function onTicks(ticks: any[]) {
+  console.log("Ticks", ticks);
+}
 
-  	ticker.on("reconnecting", function(reconnect_interval, reconnections) {
-  		console.log("Reconnecting: attempt - ", reconnections, " innterval - ", reconnect_interval);
-  	});
+function subscribe() {
+  const items = [738561];
+  ticker.subscribe(items);
+  ticker.setMode(ticker.modeFull, items);
+}
+```
 
-  	function onTicks(ticks) {
-  		console.log("Ticks", ticks);
-  	}
+## Run unit tests
 
-  	function subscribe() {
-  		var items = [738561];
-  		ticker.subscribe(items);
-  		ticker.setMode(ticker.modeFull, items);
-  	}
+```
+npm run test
+```
+
+## Generate documentation
+
+```
+$ npm install typedoc --save-dev
+$ npx typedoc --out ./docs
+```
 
 ## Changelog
 
 [Check CHANGELOG.md](CHANGELOG.md)
 
-A typical web application
--------------------------
+## A typical web application
+
 In a typical web application where a new instance of
 views, controllers etc. are created per incoming HTTP
 request, you will need to initialise a new instance of
@@ -146,10 +204,10 @@ Hence, in your web application, typically:
 - You will initialise an instance of the Kite client
 - Redirect the user to the `login_url()`
 - At the redirect url endpoint, obtain the
-`request_token` from the query parameters
+  `request_token` from the query parameters
 - Initialise a new instance of Kite client,
-use `request_access_token()` to obtain the `access_token`
-along with authenticated user data
+  use `request_access_token()` to obtain the `access_token`
+  along with authenticated user data
 - Store this response in a session and use the
-stored `access_token` and initialise instances
-of Kite client for subsequent API calls.
+  stored `access_token` and initialise instances
+  of Kite client for subsequent API calls.

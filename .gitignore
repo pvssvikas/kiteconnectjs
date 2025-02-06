@@ -5,6 +5,10 @@
 logs
 *.log
 npm-debug.log*
+dist
+docs
+
+**/*.js
 
 # Runtime data
 pids
@@ -40,4 +44,3 @@ jspm_packages
 # Optional REPL history
 .node_repl_history
 
-docs
